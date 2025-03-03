@@ -47,3 +47,26 @@ export interface Accountant {
   joinDate: string;
   isActive: boolean;
 }
+
+export interface FeeHead {
+  id: string;
+  name: string;
+  description?: string;
+  amount: number;
+  isOneTime: boolean; // true for one-time, false for monthly
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface FeePayment {
+  id: string;
+  studentId: string;
+  feeHeadId: string;
+  amount: number;
+  paidDate: string;
+  academicSessionId: string;
+  month?: string; // Applicable for monthly payments
+  receiptNumber: string;
+  paymentMethod: string;
+  status: 'paid' | 'pending' | 'overdue';
+}

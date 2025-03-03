@@ -9,6 +9,7 @@ import SchoolProfile from "./pages/SchoolProfile";
 import AcademicSessions from "./pages/AcademicSessions";
 import Students from "./pages/Students";
 import Accountants from "./pages/Accountants";
+import FeeManagement from "./pages/FeeManagement";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/academic-sessions" element={<AcademicSessions />} />
           <Route path="/students" element={<Students />} />
           <Route path="/accountants" element={<Accountants />} />
+          <Route path="/fee-management" element={<FeeManagement />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
