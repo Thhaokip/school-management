@@ -82,6 +82,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: BookOpen, label: "Academic Sessions", path: "/academic-sessions" },
     { icon: Users, label: "Students", path: "/students" },
     { icon: UserPlus, label: "Accountants", path: "/accountants" },
+    { icon: CreditCard, label: "Fee Management", path: "/fee-management" },
   ];
 
   const navigateTo = (path: string) => {
