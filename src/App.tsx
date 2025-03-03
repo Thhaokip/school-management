@@ -10,6 +10,7 @@ import AcademicSessions from "./pages/AcademicSessions";
 import Students from "./pages/Students";
 import Accountants from "./pages/Accountants";
 import FeeManagement from "./pages/FeeManagement";
+import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/students" element={<Students />} />
           <Route path="/accountants" element={<Accountants />} />
           <Route path="/fee-management" element={<FeeManagement />} />
+          <Route path="/payments" element={<Payments />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
