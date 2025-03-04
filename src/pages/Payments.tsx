@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useRef } from 'react';
-import { useReactToPrint } from 'react-to-pdf';
+import { usePDF } from 'react-to-pdf';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -111,6 +110,9 @@ export default function Payments() {
   });
 
   const receiptRef = useRef<HTMLDivElement>(null);
+  const { toPDF, targetRef } = usePDF({
+    filename: selectedPayment ? `Receipt-${selectedPayment.receiptNumber}.pdf` : 'Receipt.pdf',
+  });
 
   const getStudentById = (id: string) => {
     return students.find(student => student.id === id) || students[0];
@@ -120,10 +122,11 @@ export default function Payments() {
     return feeHeads.find(feeHead => feeHead.id === id) || feeHeads[0];
   };
 
-  const handlePrintReceipt = useReactToPrint({
-    content: () => receiptRef.current,
-    documentTitle: selectedPayment ? `Receipt-${selectedPayment.receiptNumber}` : 'Receipt',
-  });
+  const handlePrintReceipt = () => {
+    if (toPDF) {
+      toPDF();
+    }
+  };
 
   const handlePaymentView = (payment: FeePayment) => {
     setSelectedPayment(payment);
@@ -448,7 +451,12 @@ export default function Payments() {
             <>
               <div className="py-4">
                 <PaymentReceipt
-                  ref={receiptRef}
+                  ref={(el) => {
+                    receiptRef.current = el;
+                    if (targetRef && typeof targetRef !== 'function') {
+                      targetRef.current = el;
+                    }
+                  }}
                   payment={selectedPayment}
                   student={getStudentById(selectedPayment.studentId)}
                   feeHead={getFeeHeadById(selectedPayment.feeHeadId)}
