@@ -1,4 +1,3 @@
-
 export interface SchoolProfile {
   id: string;
   name: string;
@@ -48,6 +47,14 @@ export interface Accountant {
   isActive: boolean;
 }
 
+export interface Class {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface FeeHead {
   id: string;
   name: string;
@@ -56,6 +63,7 @@ export interface FeeHead {
   isOneTime: boolean; // true for one-time, false for monthly
   isActive: boolean;
   createdAt: string;
+  classIds?: string[]; // Classes this fee applies to
 }
 
 export interface FeePayment {

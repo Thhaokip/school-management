@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusCircle, Pencil, Trash2, Info } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -12,10 +12,13 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { FeeHead } from "@/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { FeeHead, Class } from "@/types";
 
 export default function FeeManagement() {
   const [feeHeads, setFeeHeads] = useState<FeeHead[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentFeeHead, setCurrentFeeHead] = useState<FeeHead | null>(null);
   const [formData, setFormData] = useState({
@@ -23,7 +26,38 @@ export default function FeeManagement() {
     description: "",
     amount: "",
     isOneTime: true,
+    classIds: [] as string[],
   });
+
+  // Simulate loading classes from an API
+  useEffect(() => {
+    // This would be an API call in a real application
+    // For now, we'll use some mock data
+    const mockClasses: Class[] = [
+      {
+        id: "1",
+        name: "Grade 1",
+        description: "First grade elementary",
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "2",
+        name: "Grade 2",
+        description: "Second grade elementary",
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: "3",
+        name: "Grade 3",
+        description: "Third grade elementary",
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    setClasses(mockClasses);
+  }, []);
 
   const handleCreateFeeHead = () => {
     setFormData({
@@ -31,6 +65,7 @@ export default function FeeManagement() {
       description: "",
       amount: "",
       isOneTime: true,
+      classIds: [],
     });
     setCurrentFeeHead(null);
     setIsDialogOpen(true);
@@ -42,6 +77,7 @@ export default function FeeManagement() {
       description: feeHead.description || "",
       amount: feeHead.amount.toString(),
       isOneTime: feeHead.isOneTime,
+      classIds: feeHead.classIds || [],
     });
     setCurrentFeeHead(feeHead);
     setIsDialogOpen(true);
@@ -61,6 +97,15 @@ export default function FeeManagement() {
 
   const handleToggleChange = (checked: boolean) => {
     setFormData((prev) => ({ ...prev, isOneTime: checked }));
+  };
+
+  const handleClassToggle = (classId: string) => {
+    setFormData((prev) => {
+      const classIds = prev.classIds.includes(classId)
+        ? prev.classIds.filter(id => id !== classId)
+        : [...prev.classIds, classId];
+      return { ...prev, classIds };
+    });
   };
 
   const handleSubmit = () => {
@@ -85,6 +130,7 @@ export default function FeeManagement() {
               description: formData.description,
               amount: amount,
               isOneTime: formData.isOneTime,
+              classIds: formData.classIds,
             }
           : fh
       );
@@ -100,6 +146,7 @@ export default function FeeManagement() {
         isOneTime: formData.isOneTime,
         isActive: true,
         createdAt: new Date().toISOString(),
+        classIds: formData.classIds,
       };
       setFeeHeads((prev) => [...prev, newFeeHead]);
       toast.success("Fee head created successfully");
@@ -146,6 +193,7 @@ export default function FeeManagement() {
                     <TableHead>Name</TableHead>
                     <TableHead>Amount (₹)</TableHead>
                     <TableHead>Payment Type</TableHead>
+                    <TableHead>Applicable Classes</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -157,6 +205,25 @@ export default function FeeManagement() {
                       <TableCell>₹{feeHead.amount.toLocaleString('en-IN')}</TableCell>
                       <TableCell>
                         {feeHead.isOneTime ? "One Time" : "Monthly"}
+                      </TableCell>
+                      <TableCell>
+                        {feeHead.classIds && feeHead.classIds.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {feeHead.classIds.map(classId => {
+                              const classItem = classes.find(c => c.id === classId);
+                              return classItem ? (
+                                <span 
+                                  key={classId}
+                                  className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700"
+                                >
+                                  {classItem.name}
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">All Classes</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <span
@@ -255,6 +322,37 @@ export default function FeeManagement() {
                   onCheckedChange={handleToggleChange}
                 />
               </div>
+            </div>
+            <div className="grid gap-2">
+              <Label>Applicable Classes</Label>
+              <div className="border rounded-md p-4 max-h-36 overflow-y-auto">
+                {classes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No classes available</p>
+                ) : (
+                  <div className="space-y-2">
+                    {classes.map((classItem) => (
+                      <div key={classItem.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`class-${classItem.id}`}
+                          checked={formData.classIds.includes(classItem.id)}
+                          onCheckedChange={() => handleClassToggle(classItem.id)}
+                        />
+                        <Label 
+                          htmlFor={`class-${classItem.id}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {classItem.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {formData.classIds.length === 0 
+                  ? "If no classes are selected, this fee will apply to all classes." 
+                  : `Selected ${formData.classIds.length} ${formData.classIds.length === 1 ? 'class' : 'classes'}.`}
+              </p>
             </div>
           </div>
           <DialogFooter>
