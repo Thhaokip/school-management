@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { usePDF } from 'react-to-pdf';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -11,9 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { PaymentReceipt } from '@/components/payments/PaymentReceipt';
-import { Search, FileText, Download, CreditCard, Plus, Printer, Receipt, Eye } from 'lucide-react';
-import { mockStudents } from '@/data/mockData';
-import { Student, FeeHead, FeePayment, SchoolProfile } from '@/types';
+import { Search, FileText, Download, CreditCard, Plus, Printer, Receipt, Eye, User } from 'lucide-react';
+import { mockStudents, mockAccountants } from '@/data/mockData';
+import { Student, FeeHead, FeePayment, SchoolProfile, Accountant } from '@/types';
 
 // Mock data for development
 const mockSchoolProfile: SchoolProfile = {
@@ -75,6 +76,7 @@ const mockPayments: FeePayment[] = [
     month: 'June 2023',
     receiptNumber: 'RCPT-23-0001',
     paymentMethod: 'Online Transfer',
+    accountantId: mockAccountants[0].id,
     status: 'paid'
   },
   {
@@ -86,6 +88,7 @@ const mockPayments: FeePayment[] = [
     academicSessionId: '1',
     receiptNumber: 'RCPT-23-0002',
     paymentMethod: 'Cash',
+    accountantId: mockAccountants[1].id,
     status: 'paid'
   }
 ];
@@ -93,6 +96,7 @@ const mockPayments: FeePayment[] = [
 export default function Payments() {
   const [payments, setPayments] = useState<FeePayment[]>(mockPayments);
   const [students, setStudents] = useState<Student[]>(mockStudents);
+  const [accountants, setAccountants] = useState<Accountant[]>(mockAccountants);
   const [feeHeads, setFeeHeads] = useState<FeeHead[]>(mockFeeHeads);
   const [academicSessions] = useState(mockAcademicSessions);
   const [searchTerm, setSearchTerm] = useState('');
@@ -106,6 +110,7 @@ export default function Payments() {
     amount: '',
     month: '',
     paymentMethod: 'Cash',
+    accountantId: '',
     academicSessionId: academicSessions[0]?.id || ''
   });
 
@@ -120,6 +125,10 @@ export default function Payments() {
 
   const getFeeHeadById = (id: string) => {
     return feeHeads.find(feeHead => feeHead.id === id) || feeHeads[0];
+  };
+
+  const getAccountantById = (id: string) => {
+    return accountants.find(accountant => accountant.id === id);
   };
 
   const handlePrintReceipt = () => {
@@ -140,6 +149,7 @@ export default function Payments() {
       amount: '',
       month: '',
       paymentMethod: 'Cash',
+      accountantId: '',
       academicSessionId: academicSessions[0]?.id || ''
     });
     setIsDialogOpen(true);
@@ -172,7 +182,7 @@ export default function Payments() {
   };
 
   const handleSubmit = () => {
-    if (!formData.studentId || !formData.feeHeadId || !formData.amount || !formData.paymentMethod) {
+    if (!formData.studentId || !formData.feeHeadId || !formData.amount || !formData.paymentMethod || !formData.accountantId) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -199,6 +209,7 @@ export default function Payments() {
       month: formData.month,
       receiptNumber: generateReceiptNumber(),
       paymentMethod: formData.paymentMethod,
+      accountantId: formData.accountantId,
       status: 'paid'
     };
 
@@ -214,12 +225,14 @@ export default function Payments() {
   const filteredPayments = payments.filter(payment => {
     const student = getStudentById(payment.studentId);
     const feeHead = getFeeHeadById(payment.feeHeadId);
+    const accountant = getAccountantById(payment.accountantId);
     
     return (
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       feeHead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.receiptNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      payment.receiptNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (accountant && accountant.name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -236,6 +249,9 @@ export default function Payments() {
     
     return months;
   };
+
+  // Filter only active accountants
+  const activeAccountants = accountants.filter(accountant => accountant.isActive);
 
   return (
     <DashboardLayout>
@@ -275,6 +291,7 @@ export default function Payments() {
                   <TableHead>Fee Type</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Amount (₹)</TableHead>
+                  <TableHead>Collected By</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -282,7 +299,7 @@ export default function Payments() {
               <TableBody>
                 {filteredPayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                       {searchTerm 
                         ? "No payments match your search criteria." 
                         : "No payments recorded yet."
@@ -293,6 +310,7 @@ export default function Payments() {
                   filteredPayments.map((payment) => {
                     const student = getStudentById(payment.studentId);
                     const feeHead = getFeeHeadById(payment.feeHeadId);
+                    const accountant = getAccountantById(payment.accountantId);
                     return (
                       <TableRow key={payment.id}>
                         <TableCell className="font-medium">{payment.receiptNumber}</TableCell>
@@ -300,6 +318,7 @@ export default function Payments() {
                         <TableCell>{feeHead.name}</TableCell>
                         <TableCell>{new Date(payment.paidDate).toLocaleDateString('en-IN')}</TableCell>
                         <TableCell>₹{payment.amount.toLocaleString('en-IN')}</TableCell>
+                        <TableCell>{accountant?.name || "Admin"}</TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold 
@@ -411,6 +430,28 @@ export default function Payments() {
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="accountantId">Collected By *</Label>
+              <Select 
+                value={formData.accountantId} 
+                onValueChange={(value) => handleSelectChange('accountantId', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select accountant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeAccountants.length > 0 ? (
+                    activeAccountants.map((accountant) => (
+                      <SelectItem key={accountant.id} value={accountant.id}>
+                        {accountant.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="admin">Administrator</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="paymentMethod">Payment Method *</Label>
               <Select 
                 value={formData.paymentMethod} 
@@ -461,6 +502,7 @@ export default function Payments() {
                   student={getStudentById(selectedPayment.studentId)}
                   feeHead={getFeeHeadById(selectedPayment.feeHeadId)}
                   schoolProfile={mockSchoolProfile}
+                  accountant={getAccountantById(selectedPayment.accountantId)}
                 />
               </div>
               <DialogFooter>

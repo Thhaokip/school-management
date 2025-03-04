@@ -1,17 +1,18 @@
 
 import React from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { Student, FeeHead, FeePayment, SchoolProfile } from '@/types';
+import { Student, FeeHead, FeePayment, SchoolProfile, Accountant } from '@/types';
 
 interface PaymentReceiptProps {
   payment: FeePayment;
   student: Student;
   feeHead: FeeHead;
   schoolProfile: SchoolProfile;
+  accountant?: Accountant;
 }
 
 export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptProps>(
-  ({ payment, student, feeHead, schoolProfile }, ref) => {
+  ({ payment, student, feeHead, schoolProfile, accountant }, ref) => {
     const paymentDate = new Date(payment.paidDate);
     
     return (
@@ -100,6 +101,7 @@ export const PaymentReceipt = React.forwardRef<HTMLDivElement, PaymentReceiptPro
         <div className="flex justify-between mt-10 pt-6 border-t border-gray-200">
           <div>
             <p className="text-xs text-gray-500">Received By</p>
+            <p className="font-medium text-sm">{accountant?.name || 'Administrator'}</p>
             <div className="mt-10 pt-2 border-t border-gray-300 w-32">
               <p className="text-xs text-gray-500 text-center">Authorized Signature</p>
             </div>

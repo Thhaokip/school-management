@@ -1,3 +1,4 @@
+
 export interface SchoolProfile {
   id: string;
   name: string;
@@ -76,5 +77,6 @@ export interface FeePayment {
   month?: string; // Applicable for monthly payments
   receiptNumber: string;
   paymentMethod: string;
+  accountantId: string; // Added field to track which accountant processed the payment
   status: 'paid' | 'pending' | 'overdue';
 }
