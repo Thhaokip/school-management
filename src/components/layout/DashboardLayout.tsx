@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, Users, BookOpen, 
-  CreditCard, UserPlus, School, Settings, Menu, X, LogOut, GraduationCap
+  CreditCard, UserPlus, School, Settings, Menu, X, LogOut, GraduationCap, Receipt
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -84,6 +84,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: Users, label: "Students", path: "/students" },
     { icon: UserPlus, label: "Accountants", path: "/accountants" },
     { icon: CreditCard, label: "Fee Management", path: "/fee-management" },
+    { icon: Receipt, label: "Payments", path: "/payments" },
   ];
 
   const navigateTo = (path: string) => {
