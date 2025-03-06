@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { usePDF } from 'react-to-pdf';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -15,6 +14,10 @@ import { PaymentReceipt } from '@/components/payments/PaymentReceipt';
 import { Search, FileText, Download, CreditCard, Plus, Printer, Receipt, Eye, User } from 'lucide-react';
 import { mockStudents, mockAccountants } from '@/data/mockData';
 import { Student, FeeHead, FeePayment, SchoolProfile, Accountant } from '@/types';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CheckIcon } from "lucide-react";
 
 // Mock data for development
 const mockSchoolProfile: SchoolProfile = {
@@ -118,6 +121,9 @@ export default function Payments() {
   const { toPDF, targetRef } = usePDF({
     filename: selectedPayment ? `Receipt-${selectedPayment.receiptNumber}.pdf` : 'Receipt.pdf',
   });
+
+  const [isStudentPopoverOpen, setIsStudentPopoverOpen] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
   const getStudentById = (id: string) => {
     return students.find(student => student.id === id) || students[0];
@@ -253,6 +259,12 @@ export default function Payments() {
   // Filter only active accountants
   const activeAccountants = accountants.filter(accountant => accountant.isActive);
 
+  // Filter students based on search query
+  const filteredStudents = students.filter((student) => 
+    student.name.toLowerCase().includes(studentSearchQuery.toLowerCase()) || 
+    student.studentId.toLowerCase().includes(studentSearchQuery.toLowerCase())
+  );
+
   return (
     <DashboardLayout>
       <PageHeader
@@ -352,7 +364,7 @@ export default function Payments() {
         </Card>
       </div>
 
-      {/* New Payment Dialog */}
+      {/* New Payment Dialog with searchable student dropdown */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -364,22 +376,62 @@ export default function Payments() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="studentId">Student *</Label>
-              <Select 
-                value={formData.studentId} 
-                onValueChange={(value) => handleSelectChange('studentId', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select student" />
-                </SelectTrigger>
-                <SelectContent>
-                  {students.map((student) => (
-                    <SelectItem key={student.id} value={student.id}>
-                      {student.name} ({student.studentId})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={isStudentPopoverOpen} onOpenChange={setIsStudentPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={isStudentPopoverOpen}
+                    className="w-full justify-between"
+                  >
+                    {formData.studentId
+                      ? students.find((student) => student.id === formData.studentId)?.name || "Select student"
+                      : "Select student"}
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Search student name or ID..." 
+                      value={studentSearchQuery}
+                      onValueChange={setStudentSearchQuery}
+                    />
+                    <CommandEmpty>No student found.</CommandEmpty>
+                    <CommandGroup>
+                      <CommandList>
+                        {filteredStudents.map((student) => (
+                          <CommandItem
+                            key={student.id}
+                            value={student.id}
+                            onSelect={() => {
+                              handleSelectChange('studentId', student.id);
+                              setIsStudentPopoverOpen(false);
+                              setStudentSearchQuery('');
+                            }}
+                          >
+                            <div className="flex flex-col">
+                              <span>{student.name}</span>
+                              <span className="text-xs text-muted-foreground">ID: {student.studentId} • Class: {student.class}</span>
+                            </div>
+                            <CheckIcon
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                formData.studentId === student.id
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandList>
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
+
+            {/* Rest of the form fields */}
             <div className="grid gap-2">
               <Label htmlFor="feeHeadId">Fee Type *</Label>
               <Select 
