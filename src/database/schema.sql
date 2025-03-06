@@ -14,7 +14,10 @@ CREATE TABLE IF NOT EXISTS students (
   parentName VARCHAR(100) NOT NULL,
   contactNumber VARCHAR(20) NOT NULL,
   email VARCHAR(100),
+  address VARCHAR(255),
+  dateOfBirth DATE,
   joinDate DATE,
+  image VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -70,6 +73,43 @@ CREATE TABLE IF NOT EXISTS fee_class_mapping (
   UNIQUE KEY unique_fee_class (feeHeadId, classId)
 );
 
+-- Create fee_payments table
+CREATE TABLE IF NOT EXISTS fee_payments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  studentId INT NOT NULL,
+  feeHeadId INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  paidDate DATETIME NOT NULL,
+  academicSessionId INT NOT NULL,
+  month VARCHAR(20),
+  receiptNumber VARCHAR(20) NOT NULL UNIQUE,
+  paymentMethod VARCHAR(50) NOT NULL,
+  accountantId INT NOT NULL,
+  status ENUM('paid', 'pending', 'overdue') NOT NULL DEFAULT 'paid',
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (studentId) REFERENCES students(id) ON DELETE RESTRICT,
+  FOREIGN KEY (feeHeadId) REFERENCES fee_heads(id) ON DELETE RESTRICT,
+  FOREIGN KEY (academicSessionId) REFERENCES academic_sessions(id) ON DELETE RESTRICT,
+  FOREIGN KEY (accountantId) REFERENCES accountants(id) ON DELETE RESTRICT
+);
+
+-- Create school_profile table
+CREATE TABLE IF NOT EXISTS school_profile (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  address VARCHAR(255) NOT NULL,
+  city VARCHAR(50) NOT NULL,
+  state VARCHAR(50) NOT NULL,
+  zipCode VARCHAR(20) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  website VARCHAR(100),
+  logo VARCHAR(255),
+  established VARCHAR(10),
+  description TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Insert initial data - academic sessions
 INSERT INTO academic_sessions (name, startDate, endDate, isActive) VALUES
 ('2023-2024', '2023-06-01', '2024-04-30', TRUE),
@@ -94,3 +134,23 @@ INSERT INTO classes (name, description, isActive) VALUES
 ('Grade 1', 'First grade elementary', TRUE),
 ('Grade 2', 'Second grade elementary', TRUE),
 ('Grade 3', 'Third grade elementary', TRUE);
+
+-- Insert initial data - fee heads
+INSERT INTO fee_heads (name, description, amount, isOneTime, isActive) VALUES
+('Tuition Fee', 'Monthly tuition fee', 5000, FALSE, TRUE),
+('Admission Fee', 'One-time admission fee', 25000, TRUE, TRUE),
+('Library Fee', 'Annual library fee', 2000, TRUE, TRUE);
+
+-- Insert initial data - fee class mappings
+INSERT INTO fee_class_mapping (feeHeadId, classId) VALUES
+(1, 1), -- Tuition Fee applies to Grade 1
+(1, 2), -- Tuition Fee applies to Grade 2
+(1, 3), -- Tuition Fee applies to Grade 3
+(2, 1), -- Admission Fee applies to Grade 1
+(2, 2), -- Admission Fee applies to Grade 2
+(2, 3), -- Admission Fee applies to Grade 3
+(3, 1); -- Library Fee applies to Grade 1
+
+-- Insert sample school profile
+INSERT INTO school_profile (name, address, city, state, zipCode, phone, email, website, established, description) VALUES
+('Oak Tree International School', '123 Education Street', 'Bangalore', 'Karnataka', '560001', '+91 8765432109', 'info@oaktreeschool.edu', 'www.oaktreeschool.edu', '1995', 'Nurturing young minds for a brighter future');

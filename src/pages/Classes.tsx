@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { PlusCircle, Pencil, Trash2, Info, Bookmark } from "lucide-react";
+import { useState, useEffect } from "react";
+import { PlusCircle, Pencil, Trash2, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -12,17 +12,37 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { classesAPI } from "@/services/api";
 import type { Class } from "@/types";
 
 export default function Classes() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentClass, setCurrentClass] = useState<Class | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     isActive: true,
   });
+
+  useEffect(() => {
+    fetchClasses();
+  }, []);
+
+  const fetchClasses = async () => {
+    try {
+      setIsLoading(true);
+      const data = await classesAPI.getAll();
+      setClasses(data);
+    } catch (error) {
+      console.error("Error fetching classes:", error);
+      toast.error("Failed to fetch classes");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleCreateClass = () => {
     setFormData({
@@ -44,9 +64,15 @@ export default function Classes() {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteClass = (id: string) => {
-    setClasses(classes.filter((classItem) => classItem.id !== id));
-    toast.success("Class deleted successfully");
+  const handleDeleteClass = async (id: string) => {
+    try {
+      await classesAPI.delete(id);
+      setClasses(classes.filter((classItem) => classItem.id !== id));
+      toast.success("Class deleted successfully");
+    } catch (error) {
+      console.error("Error deleting class:", error);
+      toast.error("Failed to delete class");
+    }
   };
 
   const handleInputChange = (
@@ -60,39 +86,64 @@ export default function Classes() {
     setFormData((prev) => ({ ...prev, isActive: checked }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name) {
       toast.error("Please enter a class name");
       return;
     }
 
-    if (currentClass) {
-      // Update existing class
-      const updatedClasses = classes.map((cls) =>
-        cls.id === currentClass.id
-          ? {
-              ...cls,
-              name: formData.name,
-              description: formData.description,
-              isActive: formData.isActive,
-            }
-          : cls
-      );
-      setClasses(updatedClasses);
-      toast.success("Class updated successfully");
-    } else {
-      // Create new class
-      const newClass: Class = {
-        id: Date.now().toString(),
-        name: formData.name,
-        description: formData.description,
-        isActive: formData.isActive,
-        createdAt: new Date().toISOString(),
-      };
-      setClasses((prev) => [...prev, newClass]);
-      toast.success("Class created successfully");
+    try {
+      setIsSubmitting(true);
+      
+      if (currentClass) {
+        // Update existing class
+        await classesAPI.update({
+          ...currentClass,
+          name: formData.name,
+          description: formData.description,
+          isActive: formData.isActive,
+        });
+        
+        setClasses(prevClasses => 
+          prevClasses.map(cls => 
+            cls.id === currentClass.id 
+              ? {
+                  ...cls,
+                  name: formData.name,
+                  description: formData.description,
+                  isActive: formData.isActive,
+                }
+              : cls
+          )
+        );
+        
+        toast.success("Class updated successfully");
+      } else {
+        // Create new class
+        const newClassData = {
+          name: formData.name,
+          description: formData.description,
+          isActive: formData.isActive,
+        };
+        
+        const response = await classesAPI.create(newClassData);
+        const newClass = {
+          id: response.id,
+          ...newClassData,
+          createdAt: new Date().toISOString(),
+        };
+        
+        setClasses((prev) => [...prev, newClass]);
+        toast.success("Class created successfully");
+      }
+      
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error saving class:", error);
+      toast.error("Failed to save class");
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsDialogOpen(false);
   };
 
   return (
@@ -108,7 +159,13 @@ export default function Classes() {
       />
 
       <div className="grid gap-6">
-        {classes.length === 0 ? (
+        {isLoading ? (
+          <Card>
+            <CardContent className="flex items-center justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </CardContent>
+          </Card>
+        ) : classes.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-10">
               <Info className="h-12 w-12 text-muted-foreground mb-4" />
@@ -231,10 +288,13 @@ export default function Classes() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit}>Save</Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

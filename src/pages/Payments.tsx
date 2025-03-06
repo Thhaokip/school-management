@@ -11,101 +11,33 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { PaymentReceipt } from '@/components/payments/PaymentReceipt';
-import { Search, FileText, Download, CreditCard, Plus, Printer, Receipt, Eye, User } from 'lucide-react';
-import { mockStudents, mockAccountants } from '@/data/mockData';
-import { Student, FeeHead, FeePayment, SchoolProfile, Accountant } from '@/types';
+import { 
+  Search, FileText, Download, CreditCard, Plus, Printer, 
+  Receipt, Eye, User, Loader2 
+} from 'lucide-react';
+import { 
+  studentsAPI, feeHeadsAPI, academicSessionsAPI, 
+  accountantsAPI, paymentsAPI, schoolProfileAPI 
+} from '@/services/api';
+import { Student, FeeHead, FeePayment, SchoolProfile, Accountant, AcademicSession } from '@/types';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { CheckIcon } from "lucide-react";
 
-// Mock data for development
-const mockSchoolProfile: SchoolProfile = {
-  id: '1',
-  name: 'Oak Tree International School',
-  address: '123 Education Street',
-  city: 'Bangalore',
-  state: 'Karnataka',
-  zipCode: '560001',
-  phone: '+91 8765432109',
-  email: 'info@oaktreeschool.edu',
-  logo: 'https://placehold.co/400x400?text=School+Logo',
-  established: '1995',
-  description: 'Nurturing young minds for a brighter future'
-};
-
-const mockFeeHeads: FeeHead[] = [
-  { 
-    id: '1', 
-    name: 'Tuition Fee', 
-    description: 'Monthly tuition fee', 
-    amount: 5000, 
-    isOneTime: false, 
-    isActive: true, 
-    createdAt: '2023-01-01T00:00:00Z' 
-  },
-  { 
-    id: '2', 
-    name: 'Admission Fee', 
-    description: 'One-time admission fee', 
-    amount: 25000, 
-    isOneTime: true, 
-    isActive: true, 
-    createdAt: '2023-01-01T00:00:00Z' 
-  },
-  { 
-    id: '3', 
-    name: 'Library Fee', 
-    description: 'Annual library fee', 
-    amount: 2000, 
-    isOneTime: true, 
-    isActive: true, 
-    createdAt: '2023-01-01T00:00:00Z' 
-  }
-];
-
-const mockAcademicSessions = [
-  { id: '1', name: '2023-2024', startDate: '2023-04-01', endDate: '2024-03-31', isActive: true }
-];
-
-const mockPayments: FeePayment[] = [
-  {
-    id: '1',
-    studentId: mockStudents[0].id,
-    feeHeadId: '1',
-    amount: 5000,
-    paidDate: '2023-06-10T10:30:00Z',
-    academicSessionId: '1',
-    month: 'June 2023',
-    receiptNumber: 'RCPT-23-0001',
-    paymentMethod: 'Online Transfer',
-    accountantId: mockAccountants[0].id,
-    status: 'paid'
-  },
-  {
-    id: '2',
-    studentId: mockStudents[1].id,
-    feeHeadId: '2',
-    amount: 25000,
-    paidDate: '2023-05-15T14:20:00Z',
-    academicSessionId: '1',
-    receiptNumber: 'RCPT-23-0002',
-    paymentMethod: 'Cash',
-    accountantId: mockAccountants[1].id,
-    status: 'paid'
-  }
-];
-
 export default function Payments() {
-  const [payments, setPayments] = useState<FeePayment[]>(mockPayments);
-  const [students, setStudents] = useState<Student[]>(mockStudents);
-  const [accountants, setAccountants] = useState<Accountant[]>(mockAccountants);
-  const [feeHeads, setFeeHeads] = useState<FeeHead[]>(mockFeeHeads);
-  const [academicSessions] = useState(mockAcademicSessions);
+  const [payments, setPayments] = useState<FeePayment[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [accountants, setAccountants] = useState<Accountant[]>([]);
+  const [feeHeads, setFeeHeads] = useState<FeeHead[]>([]);
+  const [academicSessions, setAcademicSessions] = useState<AcademicSession[]>([]);
+  const [schoolProfile, setSchoolProfile] = useState<SchoolProfile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<FeePayment | null>(null);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     studentId: '',
@@ -114,7 +46,7 @@ export default function Payments() {
     month: '',
     paymentMethod: 'Cash',
     accountantId: '',
-    academicSessionId: academicSessions[0]?.id || ''
+    academicSessionId: ''
   });
 
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -125,12 +57,57 @@ export default function Payments() {
   const [isStudentPopoverOpen, setIsStudentPopoverOpen] = useState(false);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch all data in parallel
+        const [
+          studentsData,
+          accountantsData,
+          feeHeadsData,
+          academicSessionsData,
+          paymentsData,
+          schoolProfileData
+        ] = await Promise.all([
+          studentsAPI.getAll(),
+          accountantsAPI.getAll(),
+          feeHeadsAPI.getAll(),
+          academicSessionsAPI.getAll(),
+          paymentsAPI.getAll(),
+          schoolProfileAPI.get()
+        ]);
+        
+        setStudents(studentsData);
+        setAccountants(accountantsData);
+        setFeeHeads(feeHeadsData);
+        setAcademicSessions(academicSessionsData);
+        setPayments(paymentsData);
+        setSchoolProfile(schoolProfileData);
+        
+        // Set default academic session
+        const activeSession = academicSessionsData.find(session => session.isActive);
+        if (activeSession) {
+          setFormData(prev => ({ ...prev, academicSessionId: activeSession.id }));
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
   const getStudentById = (id: string) => {
-    return students.find(student => student.id === id) || students[0];
+    return students.find(student => student.id === id);
   };
 
   const getFeeHeadById = (id: string) => {
-    return feeHeads.find(feeHead => feeHead.id === id) || feeHeads[0];
+    return feeHeads.find(feeHead => feeHead.id === id);
   };
 
   const getAccountantById = (id: string) => {
@@ -149,6 +126,7 @@ export default function Payments() {
   };
 
   const handleCreatePayment = () => {
+    // Reset form data but keep the academic session
     setFormData({
       studentId: '',
       feeHeadId: '',
@@ -156,7 +134,7 @@ export default function Payments() {
       month: '',
       paymentMethod: 'Cash',
       accountantId: '',
-      academicSessionId: academicSessions[0]?.id || ''
+      academicSessionId: formData.academicSessionId
     });
     setIsDialogOpen(true);
   };
@@ -180,14 +158,7 @@ export default function Payments() {
     }
   };
 
-  const generateReceiptNumber = () => {
-    const prefix = 'RCPT';
-    const year = new Date().getFullYear().toString().slice(-2);
-    const count = payments.length + 1;
-    return `${prefix}-${year}-${count.toString().padStart(4, '0')}`;
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.studentId || !formData.feeHeadId || !formData.amount || !formData.paymentMethod || !formData.accountantId) {
       toast.error("Please fill all required fields");
       return;
@@ -200,32 +171,41 @@ export default function Payments() {
     }
 
     const selectedFeeHead = getFeeHeadById(formData.feeHeadId);
-    if (!selectedFeeHead.isOneTime && !formData.month) {
+    if (selectedFeeHead && !selectedFeeHead.isOneTime && !formData.month) {
       toast.error("Please select a month for monthly fee");
       return;
     }
 
-    const newPayment: FeePayment = {
-      id: Date.now().toString(),
-      studentId: formData.studentId,
-      feeHeadId: formData.feeHeadId,
-      amount: amount,
-      paidDate: new Date().toISOString(),
-      academicSessionId: formData.academicSessionId,
-      month: formData.month,
-      receiptNumber: generateReceiptNumber(),
-      paymentMethod: formData.paymentMethod,
-      accountantId: formData.accountantId,
-      status: 'paid'
-    };
-
-    setPayments(prev => [...prev, newPayment]);
-    setIsDialogOpen(false);
-    toast.success("Payment recorded successfully");
-    
-    // Show receipt after adding payment
-    setSelectedPayment(newPayment);
-    setReceiptDialogOpen(true);
+    try {
+      setIsSubmitting(true);
+      
+      const paymentData = {
+        studentId: formData.studentId,
+        feeHeadId: formData.feeHeadId,
+        amount: amount,
+        academicSessionId: formData.academicSessionId,
+        month: formData.month,
+        paymentMethod: formData.paymentMethod,
+        accountantId: formData.accountantId
+      };
+      
+      const result = await paymentsAPI.create(paymentData);
+      
+      // Add the new payment to the state
+      setPayments(prev => [result.payment, ...prev]);
+      
+      setIsDialogOpen(false);
+      toast.success("Payment recorded successfully");
+      
+      // Show receipt after adding payment
+      setSelectedPayment(result.payment);
+      setReceiptDialogOpen(true);
+    } catch (error) {
+      console.error("Error recording payment:", error);
+      toast.error("Failed to record payment");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredPayments = payments.filter(payment => {
@@ -233,12 +213,18 @@ export default function Payments() {
     const feeHead = getFeeHeadById(payment.feeHeadId);
     const accountant = getAccountantById(payment.accountantId);
     
+    // If we have studentName, feeHeadName from the API response, use those
+    const studentName = payment.studentName || student?.name || '';
+    const studentId = payment.studentCode || student?.studentId || '';
+    const feeHeadName = payment.feeHeadName || feeHead?.name || '';
+    const accountantName = payment.accountantName || accountant?.name || '';
+    
     return (
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      feeHead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      feeHeadName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payment.receiptNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (accountant && accountant.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      accountantName.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -264,6 +250,20 @@ export default function Payments() {
     student.name.toLowerCase().includes(studentSearchQuery.toLowerCase()) || 
     student.studentId.toLowerCase().includes(studentSearchQuery.toLowerCase())
   );
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <PageHeader
+          title="Fee Payments"
+          description="Manage and track all student fee payments"
+        />
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -323,14 +323,20 @@ export default function Payments() {
                     const student = getStudentById(payment.studentId);
                     const feeHead = getFeeHeadById(payment.feeHeadId);
                     const accountant = getAccountantById(payment.accountantId);
+                    
+                    // Use properties from the API response if available, otherwise fallback to related objects
+                    const studentName = payment.studentName || student?.name || 'Unknown Student';
+                    const feeHeadName = payment.feeHeadName || feeHead?.name || 'Unknown Fee';
+                    const accountantName = payment.accountantName || accountant?.name || 'Admin';
+                    
                     return (
                       <TableRow key={payment.id}>
                         <TableCell className="font-medium">{payment.receiptNumber}</TableCell>
-                        <TableCell>{student.name}</TableCell>
-                        <TableCell>{feeHead.name}</TableCell>
+                        <TableCell>{studentName}</TableCell>
+                        <TableCell>{feeHeadName}</TableCell>
                         <TableCell>{new Date(payment.paidDate).toLocaleDateString('en-IN')}</TableCell>
-                        <TableCell>₹{payment.amount.toLocaleString('en-IN')}</TableCell>
-                        <TableCell>{accountant?.name || "Admin"}</TableCell>
+                        <TableCell>₹{Number(payment.amount).toLocaleString('en-IN')}</TableCell>
+                        <TableCell>{accountantName}</TableCell>
                         <TableCell>
                           <span
                             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold 
@@ -450,7 +456,7 @@ export default function Payments() {
                 </SelectContent>
               </Select>
             </div>
-            {formData.feeHeadId && !getFeeHeadById(formData.feeHeadId).isOneTime && (
+            {formData.feeHeadId && getFeeHeadById(formData.feeHeadId)?.isOneTime === false && (
               <div className="grid gap-2">
                 <Label htmlFor="month">Month *</Label>
                 <Select 
@@ -523,10 +529,20 @@ export default function Payments() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDialogOpen(false)}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSubmit}>Save & Generate Receipt</Button>
+            <Button 
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save & Generate Receipt
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -540,7 +556,7 @@ export default function Payments() {
               Receipt #{selectedPayment?.receiptNumber}
             </DialogDescription>
           </DialogHeader>
-          {selectedPayment && (
+          {selectedPayment && schoolProfile && (
             <>
               <div className="py-4">
                 <PaymentReceipt
@@ -551,10 +567,33 @@ export default function Payments() {
                     }
                   }}
                   payment={selectedPayment}
-                  student={getStudentById(selectedPayment.studentId)}
-                  feeHead={getFeeHeadById(selectedPayment.feeHeadId)}
-                  schoolProfile={mockSchoolProfile}
-                  accountant={getAccountantById(selectedPayment.accountantId)}
+                  student={getStudentById(selectedPayment.studentId) || {
+                    id: selectedPayment.studentId,
+                    studentId: selectedPayment.studentCode || '',
+                    name: selectedPayment.studentName || 'Unknown Student',
+                    class: '',
+                    section: '',
+                    rollNumber: '',
+                    parentName: '',
+                    contactNumber: ''
+                  }}
+                  feeHead={getFeeHeadById(selectedPayment.feeHeadId) || {
+                    id: selectedPayment.feeHeadId,
+                    name: selectedPayment.feeHeadName || 'Unknown Fee Type',
+                    amount: Number(selectedPayment.amount),
+                    isOneTime: true,
+                    isActive: true,
+                    createdAt: ''
+                  }}
+                  schoolProfile={schoolProfile}
+                  accountant={getAccountantById(selectedPayment.accountantId) || {
+                    id: selectedPayment.accountantId,
+                    name: selectedPayment.accountantName || 'Admin',
+                    email: '',
+                    phone: '',
+                    joinDate: '',
+                    isActive: true
+                  }}
                 />
               </div>
               <DialogFooter>

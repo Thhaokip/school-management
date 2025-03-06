@@ -1,5 +1,5 @@
 
-import { Student, Accountant, AcademicSession, Class, FeeHead } from "@/types";
+import { Student, Accountant, AcademicSession, Class, FeeHead, FeePayment, SchoolProfile } from "@/types";
 
 // Configure your API URL based on environment
 const API_URL = 'http://localhost/school-management/src/api';
@@ -144,6 +144,77 @@ export const classesAPI = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ id }),
+    });
+    return handleResponse(response);
+  },
+};
+
+// Fee Heads API
+export const feeHeadsAPI = {
+  getAll: async (): Promise<FeeHead[]> => {
+    const response = await fetch(`${API_URL}/fee-heads.php`);
+    return handleResponse(response);
+  },
+
+  create: async (feeHead: Omit<FeeHead, 'id' | 'createdAt'>): Promise<FeeHead> => {
+    const response = await fetch(`${API_URL}/fee-heads.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(feeHead),
+    });
+    return handleResponse(response);
+  },
+
+  update: async (feeHead: FeeHead): Promise<void> => {
+    const response = await fetch(`${API_URL}/fee-heads.php`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(feeHead),
+    });
+    return handleResponse(response);
+  },
+};
+
+// Payments API
+export const paymentsAPI = {
+  getAll: async (): Promise<FeePayment[]> => {
+    const response = await fetch(`${API_URL}/payments.php`);
+    return handleResponse(response);
+  },
+
+  create: async (payment: Omit<FeePayment, 'id' | 'paidDate' | 'receiptNumber' | 'status'>): Promise<{
+    payment: FeePayment;
+    message: string;
+  }> => {
+    const response = await fetch(`${API_URL}/payments.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payment),
+    });
+    return handleResponse(response);
+  },
+};
+
+// School Profile API
+export const schoolProfileAPI = {
+  get: async (): Promise<SchoolProfile> => {
+    const response = await fetch(`${API_URL}/school-profile.php`);
+    return handleResponse(response);
+  },
+
+  save: async (profile: SchoolProfile): Promise<{ message: string }> => {
+    const response = await fetch(`${API_URL}/school-profile.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profile),
     });
     return handleResponse(response);
   },
