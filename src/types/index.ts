@@ -79,4 +79,9 @@ export interface FeePayment {
   paymentMethod: string;
   accountantId: string; // Added field to track which accountant processed the payment
   status: 'paid' | 'pending' | 'overdue';
+  // Additional properties from joined tables in the API response
+  studentName?: string;
+  studentCode?: string;
+  feeHeadName?: string;
+  accountantName?: string;
 }
