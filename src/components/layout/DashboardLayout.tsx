@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -75,8 +76,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout } = useAuth();
 
-  const sidebarItems = [
+  // If role is accountant, only show Payments
+  const sidebarItems = user?.role === 'accountant' ? [
+    { icon: Receipt, label: "Payments", path: "/payments" },
+  ] : [
     { icon: LayoutDashboard, label: "Dashboard", path: "/" },
     { icon: School, label: "School Profile", path: "/school-profile" },
     { icon: BookOpen, label: "Academic Sessions", path: "/academic-sessions" },
@@ -89,6 +94,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const navigateTo = (path: string) => {
     navigate(path);
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -149,22 +158,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             "p-4",
             collapsed ? "flex justify-center" : ""
           )}>
-            <SidebarItem
-              icon={Settings}
-              label="Settings"
-              path="/settings"
-              collapsed={collapsed}
-              onClick={() => navigateTo("/settings")}
-            />
+            {user?.role !== 'accountant' && (
+              <SidebarItem
+                icon={Settings}
+                label="Settings"
+                path="/settings"
+                collapsed={collapsed}
+                onClick={() => navigateTo("/settings")}
+              />
+            )}
             <SidebarItem
               icon={LogOut}
               label="Logout"
               path="/logout"
               collapsed={collapsed}
-              onClick={() => {
-                // Add logout logic here
-                navigateTo("/");
-              }}
+              onClick={handleLogout}
             />
           </div>
         </div>
