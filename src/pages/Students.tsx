@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,23 +9,23 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockStudents } from '@/data/mockData';
 import { Student } from '@/types';
 import { 
   Search, PlusIcon, Users, Pencil, Eye, 
-  UserPlus, FileEdit 
+  UserPlus, FileEdit, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { 
   Dialog, DialogContent, DialogDescription, 
-  DialogFooter, DialogHeader, DialogTitle, DialogTrigger 
+  DialogFooter, DialogHeader, DialogTitle
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
+import { studentsAPI } from '@/services/api';
 
 const Students = () => {
-  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const [students, setStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -40,6 +40,25 @@ const Students = () => {
     email: '',
     joinDate: ''
   });
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const data = await studentsAPI.getAll();
+      setStudents(data);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast.error('Failed to load students. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = () => {
     setEditingStudent(null);
@@ -81,39 +100,59 @@ const Students = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
     
-    if (editingStudent) {
-      // Update existing student
-      setStudents(prev => 
-        prev.map(student => 
-          student.id === editingStudent.id 
-            ? { ...student, ...formData } as Student
-            : student
-        )
-      );
-      toast.success("Student information updated successfully");
-    } else {
-      // Create new student
-      const newStudent: Student = {
-        id: String(students.length + 1),
-        studentId: formData.studentId || generateStudentId(),
-        name: formData.name || '',
-        class: formData.class || '',
-        section: formData.section || '',
-        rollNumber: formData.rollNumber || '',
-        parentName: formData.parentName || '',
-        contactNumber: formData.contactNumber || '',
-        email: formData.email,
-        joinDate: formData.joinDate
-      };
-      
-      setStudents(prev => [...prev, newStudent]);
-      toast.success("Student added successfully");
+    try {
+      if (editingStudent) {
+        // Update existing student
+        await studentsAPI.update({
+          id: editingStudent.id,
+          ...formData as Student
+        });
+        
+        // Update local state
+        setStudents(prev => 
+          prev.map(student => 
+            student.id === editingStudent.id 
+              ? { ...student, ...formData } as Student
+              : student
+          )
+        );
+        toast.success("Student information updated successfully");
+      } else {
+        // Create new student
+        const studentData = {
+          studentId: formData.studentId || generateStudentId(),
+          name: formData.name || '',
+          class: formData.class || '',
+          section: formData.section || '',
+          rollNumber: formData.rollNumber || '',
+          parentName: formData.parentName || '',
+          contactNumber: formData.contactNumber || '',
+          email: formData.email,
+          joinDate: formData.joinDate || format(new Date(), 'yyyy-MM-dd')
+        };
+        
+        const response = await studentsAPI.create(studentData);
+        
+        // Add to local state with the ID from the response
+        const newStudent = {
+          id: response.id || String(students.length + 1),
+          ...studentData
+        };
+        
+        setStudents(prev => [...prev, newStudent]);
+        toast.success("Student added successfully");
+      }
+    } catch (error) {
+      console.error('Error saving student:', error);
+      toast.error('Failed to save student. Please try again.');
+    } finally {
+      setSubmitting(false);
+      setOpenDialog(false);
     }
-    
-    setOpenDialog(false);
   };
 
   const generateStudentId = () => {
@@ -160,63 +199,70 @@ const Students = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Roll No.</TableHead>
-                  <TableHead>Parent Name</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.length === 0 ? (
+            {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                <span className="ml-2">Loading students...</span>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                      {searchTerm 
-                        ? "No students match your search criteria." 
-                        : "No students found. Add a student to get started."
-                      }
-                    </TableCell>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead>Class</TableHead>
+                    <TableHead>Roll No.</TableHead>
+                    <TableHead>Parent Name</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredStudents.map((student) => (
-                    <TableRow key={student.id} className="hover-scale">
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono">
-                          {student.studentId}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">{student.name}</TableCell>
-                      <TableCell>{student.class} {student.section}</TableCell>
-                      <TableCell>{student.rollNumber}</TableCell>
-                      <TableCell>{student.parentName}</TableCell>
-                      <TableCell>{student.contactNumber}</TableCell>
-                      <TableCell className="text-right space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleEdit(student)}
-                        >
-                          <FileEdit className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only">View</span>
-                        </Button>
+                </TableHeader>
+                <TableBody>
+                  {filteredStudents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                        {searchTerm 
+                          ? "No students match your search criteria." 
+                          : "No students found. Add a student to get started."
+                        }
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    filteredStudents.map((student) => (
+                      <TableRow key={student.id} className="hover-scale">
+                        <TableCell>
+                          <Badge variant="outline" className="font-mono">
+                            {student.studentId}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">{student.name}</TableCell>
+                        <TableCell>{student.class} {student.section}</TableCell>
+                        <TableCell>{student.rollNumber}</TableCell>
+                        <TableCell>{student.parentName}</TableCell>
+                        <TableCell>{student.contactNumber}</TableCell>
+                        <TableCell className="text-right space-x-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleEdit(student)}
+                          >
+                            <FileEdit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                          >
+                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">View</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
         
@@ -354,11 +400,19 @@ const Students = () => {
                   type="button"
                   variant="outline"
                   onClick={() => setOpenDialog(false)}
+                  disabled={submitting}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingStudent ? "Update Student" : "Add Student"}
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editingStudent ? "Updating..." : "Adding..."}
+                    </>
+                  ) : (
+                    editingStudent ? "Update Student" : "Add Student"
+                  )}
                 </Button>
               </DialogFooter>
             </form>
