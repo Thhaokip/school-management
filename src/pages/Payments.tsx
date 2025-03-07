@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePDF } from 'react-to-pdf';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -253,7 +252,7 @@ export default function Payments() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <div>
         <PageHeader
           title="Fee Payments"
           description="Manage and track all student fee payments"
@@ -261,12 +260,12 @@ export default function Payments() {
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <div>
       <PageHeader
         title="Fee Payments"
         description="Manage and track all student fee payments"
@@ -615,6 +614,6 @@ export default function Payments() {
           )}
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </div>
   );
 }

@@ -1,6 +1,4 @@
-
 import { useState, useEffect } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -170,164 +168,162 @@ const Students = () => {
   );
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
-        <PageHeader 
-          title="Students" 
-          description="Manage all student records"
-          action={{
-            label: "Add Student",
-            icon: <UserPlus className="mr-2 h-4 w-4" />,
-            onClick: handleCreate
-          }}
-        />
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader 
+        title="Students" 
+        description="Manage all student records"
+        action={{
+          label: "Add Student",
+          icon: <UserPlus className="mr-2 h-4 w-4" />,
+          onClick: handleCreate
+        }}
+      />
 
-        <Card className="shadow-subtle animate-scale-in">
-          <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
-            <CardTitle className="text-xl flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              All Students
-            </CardTitle>
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search students..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      <Card className="shadow-subtle animate-scale-in">
+        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            All Students
+          </CardTitle>
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search students..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <span className="ml-2">Loading students...</span>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                <span className="ml-2">Loading students...</span>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Class</TableHead>
+                  <TableHead>Roll No.</TableHead>
+                  <TableHead>Parent Name</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredStudents.length === 0 ? (
                   <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Student Name</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Roll No.</TableHead>
-                    <TableHead>Parent Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                      {searchTerm 
+                        ? "No students match your search criteria." 
+                        : "No students found. Add a student to get started."
+                      }
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStudents.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                        {searchTerm 
-                          ? "No students match your search criteria." 
-                          : "No students found. Add a student to get started."
-                        }
+                ) : (
+                  filteredStudents.map((student) => (
+                    <TableRow key={student.id} className="hover-scale">
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono">
+                          {student.studentId}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{student.name}</TableCell>
+                      <TableCell>{student.class} {student.section}</TableCell>
+                      <TableCell>{student.rollNumber}</TableCell>
+                      <TableCell>{student.parentName}</TableCell>
+                      <TableCell>{student.contactNumber}</TableCell>
+                      <TableCell className="text-right space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleEdit(student)}
+                        >
+                          <FileEdit className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">View</span>
+                        </Button>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredStudents.map((student) => (
-                      <TableRow key={student.id} className="hover-scale">
-                        <TableCell>
-                          <Badge variant="outline" className="font-mono">
-                            {student.studentId}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium">{student.name}</TableCell>
-                        <TableCell>{student.class} {student.section}</TableCell>
-                        <TableCell>{student.rollNumber}</TableCell>
-                        <TableCell>{student.parentName}</TableCell>
-                        <TableCell>{student.contactNumber}</TableCell>
-                        <TableCell className="text-right space-x-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleEdit(student)}
-                          >
-                            <FileEdit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                          >
-                            <Eye className="h-4 w-4" />
-                            <span className="sr-only">View</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingStudent ? "Edit Student Information" : "Add New Student"}
-              </DialogTitle>
-              <DialogDescription>
-                {editingStudent 
-                  ? "Update the student's details in the system."
-                  : "Add a new student to the academic records."
-                }
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="studentId" className="text-right">
-                    Student ID
-                  </Label>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {editingStudent ? "Edit Student Information" : "Add New Student"}
+            </DialogTitle>
+            <DialogDescription>
+              {editingStudent 
+                ? "Update the student's details in the system."
+                : "Add a new student to the academic records."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="studentId" className="text-right">
+                  Student ID
+                </Label>
+                <Input
+                  id="studentId"
+                  name="studentId"
+                  value={formData.studentId}
+                  onChange={handleChange}
+                  className="col-span-3"
+                  readOnly={!!editingStudent}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Full Name
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Class & Section</Label>
+                <div className="col-span-3 grid grid-cols-2 gap-4">
                   <Input
-                    id="studentId"
-                    name="studentId"
-                    value={formData.studentId}
+                    id="class"
+                    name="class"
+                    placeholder="Class"
+                    value={formData.class}
                     onChange={handleChange}
-                    className="col-span-3"
-                    readOnly={!!editingStudent}
                     required
                   />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Full Name
-                  </Label>
                   <Input
-                    id="name"
-                    name="name"
-                    value={formData.name}
+                    id="section"
+                    name="section"
+                    placeholder="Section"
+                    value={formData.section}
                     onChange={handleChange}
-                    className="col-span-3"
                     required
                   />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Class & Section</Label>
-                  <div className="col-span-3 grid grid-cols-2 gap-4">
-                    <Input
-                      id="class"
-                      name="class"
-                      placeholder="Class"
-                      value={formData.class}
-                      onChange={handleChange}
-                      required
-                    />
-                    <Input
-                      id="section"
-                      name="section"
-                      placeholder="Section"
-                      value={formData.section}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="rollNumber" className="text-right">
@@ -419,7 +415,7 @@ const Students = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </DashboardLayout>
+    
   );
 };
 
