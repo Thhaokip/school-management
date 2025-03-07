@@ -1,7 +1,7 @@
 
 import { Student, Accountant, AcademicSession, Class, FeeHead, FeePayment, SchoolProfile } from "@/types";
 
-// Configure your API URL based on environment
+// Configure your API URL based on environment - Updated for XAMPP
 const API_URL = 'http://localhost/school-management/src/api';
 
 // Generic function to handle API responses

@@ -6,11 +6,11 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE");
 header("Content-Type: application/json");
 
-// Database configuration
+// Database configuration - XAMPP default settings
 $host = "localhost";
 $db_name = "school_management";
 $username = "root";
-$password = "";
+$password = ""; // XAMPP's default MySQL password is empty
 
 // Create database connection
 $conn = null;
