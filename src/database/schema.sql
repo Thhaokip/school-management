@@ -110,6 +110,17 @@ CREATE TABLE IF NOT EXISTS school_profile (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Create users table
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role ENUM('admin', 'accountant') NOT NULL DEFAULT 'accountant',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Insert initial data - academic sessions
 INSERT INTO academic_sessions (name, startDate, endDate, isActive) VALUES
 ('2023-2024', '2023-06-01', '2024-04-30', TRUE),
@@ -154,3 +165,9 @@ INSERT INTO fee_class_mapping (feeHeadId, classId) VALUES
 -- Insert sample school profile
 INSERT INTO school_profile (name, address, city, state, zipCode, phone, email, website, established, description) VALUES
 ('Oak Tree International School', '123 Education Street', 'Bangalore', 'Karnataka', '560001', '+91 8765432109', 'info@oaktreeschool.edu', 'www.oaktreeschool.edu', '1995', 'Nurturing young minds for a brighter future');
+
+-- Insert initial users (admin and accountant)
+INSERT INTO users (name, email, password, role) VALUES
+('Admin User', 'admin@example.com', 'admin123', 'admin'),
+('Accountant User', 'accountant@example.com', 'accountant123', 'accountant');
+
