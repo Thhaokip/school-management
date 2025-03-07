@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -325,97 +326,97 @@ const Students = () => {
                     required
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="rollNumber" className="text-right">
-                    Roll No.
-                  </Label>
-                  <Input
-                    id="rollNumber"
-                    name="rollNumber"
-                    value={formData.rollNumber}
-                    onChange={handleChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="parentName" className="text-right">
-                    Parent Name
-                  </Label>
-                  <Input
-                    id="parentName"
-                    name="parentName"
-                    value={formData.parentName}
-                    onChange={handleChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="contactNumber" className="text-right">
-                    Contact Number
-                  </Label>
-                  <Input
-                    id="contactNumber"
-                    name="contactNumber"
-                    value={formData.contactNumber}
-                    onChange={handleChange}
-                    className="col-span-3"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="joinDate" className="text-right">
-                    Join Date
-                  </Label>
-                  <Input
-                    id="joinDate"
-                    name="joinDate"
-                    type="date"
-                    value={formData.joinDate}
-                    onChange={handleChange}
-                    className="col-span-3"
-                  />
-                </div>
               </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOpenDialog(false)}
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {editingStudent ? "Updating..." : "Adding..."}
-                    </>
-                  ) : (
-                    editingStudent ? "Update Student" : "Add Student"
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-    
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="rollNumber" className="text-right">
+                  Roll No.
+                </Label>
+                <Input
+                  id="rollNumber"
+                  name="rollNumber"
+                  value={formData.rollNumber}
+                  onChange={handleChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="parentName" className="text-right">
+                  Parent Name
+                </Label>
+                <Input
+                  id="parentName"
+                  name="parentName"
+                  value={formData.parentName}
+                  onChange={handleChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="contactNumber" className="text-right">
+                  Contact Number
+                </Label>
+                <Input
+                  id="contactNumber"
+                  name="contactNumber"
+                  value={formData.contactNumber}
+                  onChange={handleChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="joinDate" className="text-right">
+                  Join Date
+                </Label>
+                <Input
+                  id="joinDate"
+                  name="joinDate"
+                  type="date"
+                  value={formData.joinDate}
+                  onChange={handleChange}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpenDialog(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {editingStudent ? "Updating..." : "Adding..."}
+                  </>
+                ) : (
+                  editingStudent ? "Update Student" : "Add Student"
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

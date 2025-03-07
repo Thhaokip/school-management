@@ -105,5 +105,29 @@ switch($method) {
             echo json_encode(array("error" => "Student ID is required"));
         }
         break;
+        
+    case 'DELETE':
+        // Delete a student
+        $data = json_decode(file_get_contents("php://input"));
+        
+        if(!empty($data->id)) {
+            try {
+                $query = "DELETE FROM students WHERE id = :id";
+                
+                $stmt = $conn->prepare($query);
+                $stmt->bindParam(':id', $data->id);
+                
+                if($stmt->execute()) {
+                    echo json_encode(array("message" => "Student deleted successfully"));
+                } else {
+                    echo json_encode(array("error" => "Unable to delete student"));
+                }
+            } catch(PDOException $e) {
+                echo json_encode(array("error" => $e->getMessage()));
+            }
+        } else {
+            echo json_encode(array("error" => "Student ID is required for deletion"));
+        }
+        break;
 }
 ?>
