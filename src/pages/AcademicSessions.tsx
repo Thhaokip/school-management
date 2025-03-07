@@ -1,6 +1,4 @@
-
 import { useState } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -119,17 +117,16 @@ const AcademicSessions = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
-        <PageHeader 
-          title="Academic Sessions" 
-          description="Manage academic years and sessions"
-          action={{
-            label: "Add Session",
-            icon: <PlusIcon className="mr-2 h-4 w-4" />,
-            onClick: handleCreate
-          }}
-        />
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader 
+        title="Academic Sessions" 
+        description="Manage academic years and sessions"
+        action={{
+          label: "Add Session",
+          icon: <PlusIcon className="mr-2 h-4 w-4" />,
+          onClick: handleCreate
+        }}
+      />
 
         <Card className="shadow-subtle animate-scale-in">
           <CardHeader>
@@ -264,8 +261,7 @@ const AcademicSessions = () => {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

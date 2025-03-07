@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { PlusCircle, Pencil, Trash2, Info } from "lucide-react";
 import { toast } from "sonner";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,7 +153,7 @@ export default function FeeManagement() {
   };
 
   return (
-    <DashboardLayout>
+    <div>
       <PageHeader
         title="Fee Management"
         description="Manage fee structure by creating and modifying fee heads"
@@ -363,6 +361,6 @@ export default function FeeManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </div>
   );
 }

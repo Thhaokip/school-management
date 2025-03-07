@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { PlusCircle, Pencil, Trash2, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -147,7 +145,7 @@ export default function Classes() {
   };
 
   return (
-    <DashboardLayout>
+    <div>
       <PageHeader
         title="Class Management"
         description="Manage classes and sections for fee allocation"
@@ -298,6 +296,6 @@ export default function Classes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </div>
   );
 }

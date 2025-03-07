@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { studentsAPI, academicSessionsAPI, paymentsAPI } from '@/services/api';
@@ -96,119 +94,117 @@ const Dashboard = () => {
   ];
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 animate-fade-in">
-        <PageHeader 
-          title="Dashboard" 
-          description={`Welcome to Fee Master - Manage your school fees effortlessly.`}
-        />
+    <div className="space-y-8 animate-fade-in">
+      <PageHeader 
+        title="Dashboard" 
+        description={`Welcome to Fee Master - Manage your school fees effortlessly.`}
+      />
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {cards.map((card, index) => (
+              <Card 
+                key={card.title} 
+                className="hover-scale cursor-pointer shadow-subtle animate-slide-in" 
+                style={{animationDelay: `${index * 100}ms`}}
+                onClick={card.onClick}
+              >
+                <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {card.title}
+                  </CardTitle>
+                  {card.icon}
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <p className="text-2xl font-semibold">{card.value}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {cards.map((card, index) => (
-                <Card 
-                  key={card.title} 
-                  className="hover-scale cursor-pointer shadow-subtle animate-slide-in" 
-                  style={{animationDelay: `${index * 100}ms`}}
-                  onClick={card.onClick}
-                >
-                  <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                      {card.title}
-                    </CardTitle>
-                    {card.icon}
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    <p className="text-2xl font-semibold">{card.value}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
-              <Card className="col-span-4 shadow-subtle animate-slide-in animate-delay-100">
-                <CardHeader>
-                  <CardTitle>Recent Activities</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {payments.length > 0 ? (
-                    <div className="space-y-4">
-                      {payments.slice(0, 5).map(payment => {
-                        const student = students.find(s => s.id === payment.studentId);
-                        return (
-                          <div key={payment.id} className="flex justify-between items-center p-3 border rounded-md">
-                            <div>
-                              <p className="font-medium">{student?.name || 'Unknown Student'}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(payment.paidDate).toLocaleDateString('en-IN')}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold">₹{Number(payment.amount).toLocaleString('en-IN')}</p>
-                              <span
-                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold 
-                                ${payment.status === 'paid' 
-                                  ? "bg-green-50 text-green-700" 
-                                  : payment.status === 'pending' 
-                                    ? "bg-yellow-50 text-yellow-700"
-                                    : "bg-red-50 text-red-700"
-                                }`}
-                              >
-                                {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      No recent payment activities found.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="col-span-3 shadow-subtle animate-slide-in animate-delay-200">
-                <CardHeader>
-                  <CardTitle>Fee Collection Overview</CardTitle>
-                </CardHeader>
-                <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+            <Card className="col-span-4 shadow-subtle animate-slide-in animate-delay-100">
+              <CardHeader>
+                <CardTitle>Recent Activities</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {payments.length > 0 ? (
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span>Total Students</span>
-                      <span className="font-semibold">{students.length}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Payments This Month</span>
-                      <span className="font-semibold">
-                        {payments.filter(p => {
-                          const paymentDate = new Date(p.paidDate);
-                          const now = new Date();
-                          return (
-                            paymentDate.getMonth() === now.getMonth() && 
-                            paymentDate.getFullYear() === now.getFullYear()
-                          );
-                        }).length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Active Session</span>
-                      <span className="font-semibold">{activeSession?.name || 'None'}</span>
-                    </div>
+                    {payments.slice(0, 5).map(payment => {
+                      const student = students.find(s => s.id === payment.studentId);
+                      return (
+                        <div key={payment.id} className="flex justify-between items-center p-3 border rounded-md">
+                          <div>
+                            <p className="font-medium">{student?.name || 'Unknown Student'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(payment.paidDate).toLocaleDateString('en-IN')}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold">₹{Number(payment.amount).toLocaleString('en-IN')}</p>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold 
+                              ${payment.status === 'paid' 
+                                ? "bg-green-50 text-green-700" 
+                                : payment.status === 'pending' 
+                                  ? "bg-yellow-50 text-yellow-700"
+                                  : "bg-red-50 text-red-700"
+                              }`}
+                            >
+                              {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          </>
-        )}
-      </div>
-    </DashboardLayout>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No recent payment activities found.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-3 shadow-subtle animate-slide-in animate-delay-200">
+              <CardHeader>
+                <CardTitle>Fee Collection Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Total Students</span>
+                    <span className="font-semibold">{students.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Payments This Month</span>
+                    <span className="font-semibold">
+                      {payments.filter(p => {
+                        const paymentDate = new Date(p.paidDate);
+                        const now = new Date();
+                        return (
+                          paymentDate.getMonth() === now.getMonth() && 
+                          paymentDate.getFullYear() === now.getFullYear()
+                        );
+                      }).length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Active Session</span>
+                    <span className="font-semibold">{activeSession?.name || 'None'}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 
