@@ -17,6 +17,7 @@ import Login from "./pages/Login";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 // Create a new query client
 const queryClient = new QueryClient();
@@ -32,21 +33,22 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
 
-            {/* Protected Routes - Accessible by all authenticated users */}
+            {/* Protected Routes with Dashboard Layout */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/payments" element={<Payments />} />
-            </Route>
+              <Route element={<DashboardLayout />}>
+                {/* Admin and Accountant Routes */}
+                <Route path="/payments" element={<Payments />} />
 
-            {/* Admin Only Routes */}
-            <Route element={<ProtectedRoute requiredRoles={['admin']} />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/school-profile" element={<SchoolProfile />} />
-              <Route path="/academic-sessions" element={<AcademicSessions />} />
-              <Route path="/classes" element={<Classes />} />
-              <Route path="/students" element={<Students />} />
-              <Route path="/accountants" element={<Accountants />} />
-              <Route path="/fee-management" element={<FeeManagement />} />
-              <Route path="/settings" element={<Settings />} />
+                {/* Admin Only Routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/school-profile" element={<SchoolProfile />} />
+                <Route path="/academic-sessions" element={<AcademicSessions />} />
+                <Route path="/classes" element={<Classes />} />
+                <Route path="/students" element={<Students />} />
+                <Route path="/accountants" element={<Accountants />} />
+                <Route path="/fee-management" element={<FeeManagement />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
             </Route>
 
             {/* Redirect to login if not found */}

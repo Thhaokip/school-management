@@ -2,7 +2,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 
 interface ProtectedRouteProps {
   requiredRoles?: string[];
@@ -31,12 +30,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRoles = [] }) =
     return <Navigate to={user.role === 'accountant' ? '/payments' : '/'} replace />;
   }
   
-  // If authenticated and authorized, render the layout with children
-  return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
-  );
+  // If authenticated and authorized, render the outlet (child routes)
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

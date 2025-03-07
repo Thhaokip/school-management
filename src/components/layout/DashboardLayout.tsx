@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, Users, BookOpen, 
@@ -72,7 +73,7 @@ const SidebarItem = ({
   );
 };
 
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+export function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -180,7 +181,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <div className="flex-1 overflow-auto">
-        <main className="p-6 max-w-7xl mx-auto">{children}</main>
+        <main className="p-6 max-w-7xl mx-auto">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
