@@ -85,3 +85,15 @@ export interface FeePayment {
   feeHeadName?: string;
   accountantName?: string;
 }
+
+// User role definition
+export type UserRole = 'admin' | 'accountant';
+
+// User interface
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  password?: string; // Only used for authentication, never stored or displayed
+}
