@@ -134,12 +134,6 @@ const Login = () => {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-center text-gray-500">
-              <p>Make sure you've imported the database schema</p>
-              <p>Use the email and password from your users table</p>
-            </div>
-          </CardFooter>
         </Card>
       </div>
     </div>

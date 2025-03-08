@@ -1,32 +1,94 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { mockSchoolProfile } from '@/data/mockData';
 import { toast } from 'sonner';
 import { SchoolProfile as SchoolProfileType } from '@/types';
 import { PencilIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { schoolProfileAPI } from '@/services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const SchoolProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<SchoolProfileType>(mockSchoolProfile);
-  const [formData, setFormData] = useState<SchoolProfileType>(mockSchoolProfile);
+  const queryClient = useQueryClient();
+  
+  const { data: profile, isLoading, error } = useQuery({
+    queryKey: ['schoolProfile'],
+    queryFn: schoolProfileAPI.get
+  });
+
+  const [formData, setFormData] = useState<SchoolProfileType | null>(null);
+
+  // Set form data when profile is loaded
+  useEffect(() => {
+    if (profile) {
+      setFormData(profile);
+    }
+  }, [profile]);
+
+  const saveProfileMutation = useMutation({
+    mutationFn: schoolProfileAPI.save,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schoolProfile'] });
+      setIsEditing(false);
+      toast.success("School profile updated successfully");
+    },
+    onError: (error) => {
+      toast.error(`Failed to save profile: ${(error as Error).message}`);
+    }
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (!formData) return;
+    
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      if (!prev) return prev;
+      return { ...prev, [name]: value };
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setProfile(formData);
-    setIsEditing(false);
-    toast.success("School profile updated successfully");
+    if (formData) {
+      saveProfileMutation.mutate(formData);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 text-red-800 p-4 rounded-md">
+          <h3 className="text-lg font-medium">Error loading school profile</h3>
+          <p>{(error as Error).message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile || !formData) {
+    return (
+      <div className="p-6">
+        <div className="bg-yellow-50 text-yellow-800 p-4 rounded-md">
+          <h3 className="text-lg font-medium">No profile found</h3>
+          <p>Please create a school profile to continue.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -157,10 +219,26 @@ const SchoolProfile = () => {
                     setFormData(profile);
                     setIsEditing(false);
                   }}
+                  disabled={saveProfileMutation.isPending}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">Save Changes</Button>
+                <Button 
+                  type="submit"
+                  disabled={saveProfileMutation.isPending}
+                >
+                  {saveProfileMutation.isPending ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
               </div>
             </form>
           ) : (

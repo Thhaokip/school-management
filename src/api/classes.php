@@ -2,6 +2,13 @@
 <?php
 require_once 'config.php';
 
+// Ensure correct content type header is set first
+header('Content-Type: application/json');
+
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 // Handle different HTTP methods
 $method = $_SERVER['REQUEST_METHOD'];
 
