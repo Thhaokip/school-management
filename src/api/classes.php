@@ -21,6 +21,7 @@ switch($method) {
             
             echo json_encode($classes);
         } catch(PDOException $e) {
+            http_response_code(500);
             echo json_encode(array("error" => $e->getMessage()));
         }
         break;
@@ -48,17 +49,21 @@ switch($method) {
                 if($stmt->execute()) {
                     // Return ID as string to match frontend expectations
                     $newId = (string)$conn->lastInsertId();
+                    http_response_code(201);
                     echo json_encode(array(
                         "id" => $newId,
                         "message" => "Class created successfully"
                     ));
                 } else {
+                    http_response_code(500);
                     echo json_encode(array("error" => "Unable to create class"));
                 }
             } catch(PDOException $e) {
+                http_response_code(500);
                 echo json_encode(array("error" => $e->getMessage()));
             }
         } else {
+            http_response_code(400);
             echo json_encode(array("error" => "Class name is required"));
         }
         break;
@@ -85,14 +90,18 @@ switch($method) {
                 $stmt->bindParam(':isActive', $isActive, PDO::PARAM_BOOL);
                 
                 if($stmt->execute()) {
+                    http_response_code(200);
                     echo json_encode(array("message" => "Class updated successfully"));
                 } else {
+                    http_response_code(500);
                     echo json_encode(array("error" => "Unable to update class"));
                 }
             } catch(PDOException $e) {
+                http_response_code(500);
                 echo json_encode(array("error" => $e->getMessage()));
             }
         } else {
+            http_response_code(400);
             echo json_encode(array("error" => "Class ID is required"));
         }
         break;
@@ -109,16 +118,25 @@ switch($method) {
                 $stmt->bindParam(':id', $data->id);
                 
                 if($stmt->execute()) {
+                    http_response_code(200);
                     echo json_encode(array("message" => "Class deleted successfully"));
                 } else {
+                    http_response_code(500);
                     echo json_encode(array("error" => "Unable to delete class"));
                 }
             } catch(PDOException $e) {
+                http_response_code(500);
                 echo json_encode(array("error" => $e->getMessage()));
             }
         } else {
+            http_response_code(400);
             echo json_encode(array("error" => "Class ID is required"));
         }
+        break;
+        
+    default:
+        http_response_code(405);
+        echo json_encode(array("error" => "Method not allowed"));
         break;
 }
 ?>

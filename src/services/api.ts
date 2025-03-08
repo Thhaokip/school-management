@@ -100,7 +100,7 @@ export const academicSessionsAPI = {
     return handleResponse(response);
   },
 
-  create: async (session: Omit<AcademicSession, 'id'>): Promise<AcademicSession> => {
+  create: async (session: Omit<AcademicSession, 'id'>): Promise<{ id: string; message: string }> => {
     const response = await fetch(`${API_URL}/academic-sessions.php`, {
       method: 'POST',
       headers: {
@@ -111,13 +111,24 @@ export const academicSessionsAPI = {
     return handleResponse(response);
   },
 
-  update: async (session: AcademicSession): Promise<void> => {
+  update: async (session: AcademicSession): Promise<{ message: string }> => {
     const response = await fetch(`${API_URL}/academic-sessions.php`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(session),
+    });
+    return handleResponse(response);
+  },
+  
+  delete: async (id: string): Promise<{ message: string }> => {
+    const response = await fetch(`${API_URL}/academic-sessions.php`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
     });
     return handleResponse(response);
   },
