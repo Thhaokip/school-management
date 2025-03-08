@@ -130,7 +130,7 @@ export const classesAPI = {
     return handleResponse(response);
   },
 
-  create: async (classItem: Omit<Class, 'id' | 'createdAt'>): Promise<Class> => {
+  create: async (classItem: Omit<Class, 'id' | 'createdAt'>): Promise<{ id: string; message: string }> => {
     const response = await fetch(`${API_URL}/classes.php`, {
       method: 'POST',
       headers: {
@@ -141,7 +141,7 @@ export const classesAPI = {
     return handleResponse(response);
   },
 
-  update: async (classItem: Class): Promise<void> => {
+  update: async (classItem: Class): Promise<{ message: string }> => {
     const response = await fetch(`${API_URL}/classes.php`, {
       method: 'PUT',
       headers: {
@@ -152,7 +152,7 @@ export const classesAPI = {
     return handleResponse(response);
   },
 
-  delete: async (id: string): Promise<void> => {
+  delete: async (id: string): Promise<{ message: string }> => {
     const response = await fetch(`${API_URL}/classes.php`, {
       method: 'DELETE',
       headers: {

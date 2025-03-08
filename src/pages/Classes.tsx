@@ -33,6 +33,7 @@ export default function Classes() {
     try {
       setIsLoading(true);
       const data = await classesAPI.getAll();
+      console.log("Fetched classes:", data); // Debug log
       setClasses(data);
     } catch (error) {
       console.error("Error fetching classes:", error);
@@ -95,12 +96,14 @@ export default function Classes() {
       
       if (currentClass) {
         // Update existing class
-        await classesAPI.update({
+        const response = await classesAPI.update({
           ...currentClass,
           name: formData.name,
           description: formData.description,
           isActive: formData.isActive,
         });
+        
+        console.log("Update response:", response); // Debug log
         
         setClasses(prevClasses => 
           prevClasses.map(cls => 
@@ -124,21 +127,29 @@ export default function Classes() {
           isActive: formData.isActive,
         };
         
-        const response = await classesAPI.create(newClassData);
-        const newClass = {
-          id: response.id,
-          ...newClassData,
-          createdAt: new Date().toISOString(),
-        };
+        console.log("Creating class with data:", newClassData); // Debug log
         
-        setClasses((prev) => [...prev, newClass]);
-        toast.success("Class created successfully");
+        const response = await classesAPI.create(newClassData);
+        console.log("Create response:", response); // Debug log
+        
+        if (response && response.id) {
+          const newClass = {
+            id: response.id,
+            ...newClassData,
+            createdAt: new Date().toISOString(),
+          };
+          
+          setClasses((prev) => [...prev, newClass]);
+          toast.success("Class created successfully");
+        } else {
+          throw new Error("Invalid response from server");
+        }
       }
       
       setIsDialogOpen(false);
     } catch (error) {
       console.error("Error saving class:", error);
-      toast.error("Failed to save class");
+      toast.error(`Failed to save class: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -13,6 +13,12 @@ switch($method) {
             $stmt->execute();
             $classes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
+            // Convert numeric strings to appropriate types
+            foreach ($classes as &$class) {
+                $class['id'] = (string)$class['id']; // Convert ID to string for frontend
+                $class['isActive'] = (bool)$class['isActive']; // Convert isActive to boolean
+            }
+            
             echo json_encode($classes);
         } catch(PDOException $e) {
             echo json_encode(array("error" => $e->getMessage()));
@@ -40,7 +46,12 @@ switch($method) {
                 $stmt->bindParam(':createdAt', $createdAt);
                 
                 if($stmt->execute()) {
-                    echo json_encode(array("id" => $conn->lastInsertId(), "message" => "Class created successfully"));
+                    // Return ID as string to match frontend expectations
+                    $newId = (string)$conn->lastInsertId();
+                    echo json_encode(array(
+                        "id" => $newId,
+                        "message" => "Class created successfully"
+                    ));
                 } else {
                     echo json_encode(array("error" => "Unable to create class"));
                 }
