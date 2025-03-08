@@ -22,24 +22,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data - in a real app, this would come from an API/database
-const MOCK_USERS = [
-  {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    password: 'admin123', // In a real app, NEVER store passwords in plain text
-    role: 'admin' as UserRole
-  },
-  {
-    id: '2',
-    name: 'Accountant User',
-    email: 'accountant@example.com',
-    password: 'accountant123',
-    role: 'accountant' as UserRole
-  }
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,35 +39,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
 
-    // Simulate API request delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Call the API for authentication
+      const response = await fetch('http://localhost/school-management/src/api/users.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    // Find user with matching credentials
-    const matchedUser = MOCK_USERS.find(
-      u => u.email === email && u.password === password
-    );
+      const data = await response.json();
 
-    if (matchedUser) {
-      // Create user object (without password)
-      const { password, ...userWithoutPassword } = matchedUser;
-      setUser(userWithoutPassword);
-      
-      // Store in localStorage for persistence
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-      
-      // Redirect based on role
-      if (userWithoutPassword.role === 'accountant') {
-        navigate('/payments');
-      } else {
-        navigate('/');
+      if (data.success && data.user) {
+        // Set user in state
+        setUser(data.user);
+        
+        // Store in localStorage for persistence
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Redirect based on role
+        if (data.user.role === 'accountant') {
+          navigate('/payments');
+        } else {
+          navigate('/');
+        }
+        
+        setIsLoading(false);
+        return true;
       }
-      
-      setIsLoading(false);
-      return true;
-    }
 
-    setIsLoading(false);
-    return false;
+      setIsLoading(false);
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      setIsLoading(false);
+      return false;
+    }
   };
 
   const logout = () => {

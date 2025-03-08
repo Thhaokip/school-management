@@ -19,6 +19,20 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
+// Auth API
+export const authAPI = {
+  login: async (email: string, password: string) => {
+    const response = await fetch(`${API_URL}/users.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    return handleResponse(response);
+  }
+};
+
 // Students API
 export const studentsAPI = {
   getAll: async (): Promise<Student[]> => {

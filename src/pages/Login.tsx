@@ -38,14 +38,15 @@ const Login = () => {
       if (!success) {
         toast({
           title: "Login Failed",
-          description: "Invalid email or password",
+          description: "Invalid email or password. Please check your credentials and try again.",
           variant: "destructive"
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: "Connection error. Please make sure the database and server are running.",
         variant: "destructive"
       });
     }
@@ -135,9 +136,8 @@ const Login = () => {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-center text-gray-500">
-              <p>Demo Credentials:</p>
-              <p>Admin: admin@example.com / admin123</p>
-              <p>Accountant: accountant@example.com / accountant123</p>
+              <p>Make sure you've imported the database schema</p>
+              <p>Use the email and password from your users table</p>
             </div>
           </CardFooter>
         </Card>
