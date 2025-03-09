@@ -31,7 +31,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check if user is stored in localStorage (for persistence)
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('user');
+      }
     }
     setIsLoading(false);
   }, []);
@@ -52,6 +57,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await response.json();
 
       if (data.success && data.user) {
+        // Ensure we have the required user data
+        if (!data.user.id || !data.user.role) {
+          console.error('Invalid user data returned from API:', data.user);
+          setIsLoading(false);
+          return false;
+        }
+        
         // Set user in state
         setUser(data.user);
         

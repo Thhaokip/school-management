@@ -45,12 +45,15 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 
-                // Bind parameters
-                $stmt->bindParam(':name', $data->name);
-                $stmt->bindParam(':description', $data->description ?? null);
-                $isActive = $data->isActive ?? true;
-                $stmt->bindParam(':isActive', $isActive, PDO::PARAM_BOOL);
+                // Bind parameters - using variables instead of passing by reference
+                $name = $data->name;
+                $description = $data->description ?? null;
+                $isActive = isset($data->isActive) ? (bool)$data->isActive : true;
                 $createdAt = date('Y-m-d H:i:s');
+                
+                $stmt->bindParam(':name', $name);
+                $stmt->bindParam(':description', $description);
+                $stmt->bindParam(':isActive', $isActive, PDO::PARAM_BOOL);
                 $stmt->bindParam(':createdAt', $createdAt);
                 
                 if($stmt->execute()) {
@@ -89,11 +92,15 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 
-                // Bind parameters
-                $stmt->bindParam(':id', $data->id);
-                $stmt->bindParam(':name', $data->name);
-                $stmt->bindParam(':description', $data->description ?? null);
-                $isActive = $data->isActive ?? true;
+                // Bind parameters - using variables instead of passing by reference
+                $id = $data->id;
+                $name = $data->name;
+                $description = $data->description ?? null;
+                $isActive = isset($data->isActive) ? (bool)$data->isActive : true;
+                
+                $stmt->bindParam(':id', $id);
+                $stmt->bindParam(':name', $name);
+                $stmt->bindParam(':description', $description);
                 $stmt->bindParam(':isActive', $isActive, PDO::PARAM_BOOL);
                 
                 if($stmt->execute()) {
@@ -122,7 +129,8 @@ switch($method) {
                 $query = "DELETE FROM classes WHERE id = :id";
                 
                 $stmt = $conn->prepare($query);
-                $stmt->bindParam(':id', $data->id);
+                $id = $data->id;
+                $stmt->bindParam(':id', $id);
                 
                 if($stmt->execute()) {
                     http_response_code(200);

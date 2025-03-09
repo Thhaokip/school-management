@@ -30,6 +30,22 @@ export const authAPI = {
       body: JSON.stringify({ email, password }),
     });
     return handleResponse(response);
+  },
+  
+  changePassword: async (userId: string, currentPassword: string, newPassword: string) => {
+    const response = await fetch(`${API_URL}/users.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        action: 'changePassword',
+        userId,
+        currentPassword,
+        newPassword
+      }),
+    });
+    return handleResponse(response);
   }
 };
 
