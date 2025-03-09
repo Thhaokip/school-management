@@ -2,6 +2,9 @@
 <?php
 require_once 'config.php';
 
+// Set content type to JSON
+header('Content-Type: application/json');
+
 // Handle different HTTP methods
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -24,17 +27,17 @@ switch($method) {
         break;
         
     case 'POST':
-        // Create school profile
-        $data = json_decode(file_get_contents("php://input"));
+        // Create or update school profile
+        $data = json_decode(file_get_contents("php://input"), true);
         
         if(
-            !empty($data->name) &&
-            !empty($data->address) &&
-            !empty($data->city) &&
-            !empty($data->state) &&
-            !empty($data->zipCode) &&
-            !empty($data->phone) &&
-            !empty($data->email)
+            !empty($data['name']) &&
+            !empty($data['address']) &&
+            !empty($data['city']) &&
+            !empty($data['state']) &&
+            !empty($data['zipCode']) &&
+            !empty($data['phone']) &&
+            !empty($data['email'])
         ) {
             try {
                 // Check if profile exists
@@ -66,18 +69,18 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 
-                // Bind parameters
-                $stmt->bindParam(':name', $data->name);
-                $stmt->bindParam(':address', $data->address);
-                $stmt->bindParam(':city', $data->city);
-                $stmt->bindParam(':state', $data->state);
-                $stmt->bindParam(':zipCode', $data->zipCode);
-                $stmt->bindParam(':phone', $data->phone);
-                $stmt->bindParam(':email', $data->email);
-                $stmt->bindParam(':website', $data->website ?? null);
-                $stmt->bindParam(':logo', $data->logo ?? null);
-                $stmt->bindParam(':established', $data->established ?? null);
-                $stmt->bindParam(':description', $data->description ?? null);
+                // Fix: Using bindValue instead of bindParam to avoid passing by reference issues
+                $stmt->bindValue(':name', $data['name']);
+                $stmt->bindValue(':address', $data['address']);
+                $stmt->bindValue(':city', $data['city']);
+                $stmt->bindValue(':state', $data['state']);
+                $stmt->bindValue(':zipCode', $data['zipCode']);
+                $stmt->bindValue(':phone', $data['phone']);
+                $stmt->bindValue(':email', $data['email']);
+                $stmt->bindValue(':website', isset($data['website']) ? $data['website'] : null);
+                $stmt->bindValue(':logo', isset($data['logo']) ? $data['logo'] : null);
+                $stmt->bindValue(':established', isset($data['established']) ? $data['established'] : null);
+                $stmt->bindValue(':description', isset($data['description']) ? $data['description'] : null);
                 
                 if($stmt->execute()) {
                     echo json_encode(array("message" => "School profile saved successfully"));
@@ -90,6 +93,9 @@ switch($method) {
         } else {
             echo json_encode(array("error" => "Incomplete data. Please provide all required fields"));
         }
+        break;
+    default:
+        echo json_encode(array("error" => "Method not allowed"));
         break;
 }
 ?>
