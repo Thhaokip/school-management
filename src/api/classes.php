@@ -1,13 +1,23 @@
-
 <?php
 require_once 'config.php';
 
 // Ensure correct content type header is set first
 header('Content-Type: application/json');
 
+// Allow requests from any origin
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
 // Enable error reporting for debugging
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 // Handle different HTTP methods
 $method = $_SERVER['REQUEST_METHOD'];
@@ -45,16 +55,14 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 
-                // Bind parameters - using bindValue instead of bindParam
-                $name = $data->name;
+                // Bind parameters
+                $stmt->bindParam(':name', $data->name);
                 $description = $data->description ?? null;
-                $isActive = isset($data->isActive) ? (bool)$data->isActive : true;
+                $stmt->bindParam(':description', $description);
+                $isActive = $data->isActive ?? true;
+                $stmt->bindParam(':isActive', $isActive, PDO::PARAM_BOOL);
                 $createdAt = date('Y-m-d H:i:s');
-                
-                $stmt->bindValue(':name', $name);
-                $stmt->bindValue(':description', $description);
-                $stmt->bindValue(':isActive', $isActive, PDO::PARAM_BOOL);
-                $stmt->bindValue(':createdAt', $createdAt);
+                $stmt->bindParam(':createdAt', $createdAt);
                 
                 if($stmt->execute()) {
                     // Return ID as string to match frontend expectations
@@ -92,16 +100,12 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 
-                // Bind parameters - using bindValue instead of bindParam
-                $id = $data->id;
-                $name = $data->name;
-                $description = $data->description ?? null;
-                $isActive = isset($data->isActive) ? (bool)$data->isActive : true;
-                
-                $stmt->bindValue(':id', $id);
-                $stmt->bindValue(':name', $name);
-                $stmt->bindValue(':description', $description);
-                $stmt->bindValue(':isActive', $isActive, PDO::PARAM_BOOL);
+                // Bind parameters
+                $stmt->bindParam(':id', $data->id);
+                $stmt->bindParam(':name', $data->name);
+                $stmt->bindParam(':description', $data->description ?? null);
+                $isActive = $data->isActive ?? true;
+                $stmt->bindParam(':isActive', $isActive, PDO::PARAM_BOOL);
                 
                 if($stmt->execute()) {
                     http_response_code(200);
@@ -129,8 +133,7 @@ switch($method) {
                 $query = "DELETE FROM classes WHERE id = :id";
                 
                 $stmt = $conn->prepare($query);
-                $id = $data->id;
-                $stmt->bindValue(':id', $id);
+                $stmt->bindParam(':id', $data->id);
                 
                 if($stmt->execute()) {
                     http_response_code(200);
