@@ -45,16 +45,16 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 
-                // Bind parameters - using variables instead of passing by reference
+                // Bind parameters - using bindValue instead of bindParam
                 $name = $data->name;
                 $description = $data->description ?? null;
                 $isActive = isset($data->isActive) ? (bool)$data->isActive : true;
                 $createdAt = date('Y-m-d H:i:s');
                 
-                $stmt->bindParam(':name', $name);
-                $stmt->bindParam(':description', $description);
-                $stmt->bindParam(':isActive', $isActive, PDO::PARAM_BOOL);
-                $stmt->bindParam(':createdAt', $createdAt);
+                $stmt->bindValue(':name', $name);
+                $stmt->bindValue(':description', $description);
+                $stmt->bindValue(':isActive', $isActive, PDO::PARAM_BOOL);
+                $stmt->bindValue(':createdAt', $createdAt);
                 
                 if($stmt->execute()) {
                     // Return ID as string to match frontend expectations
@@ -92,16 +92,16 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 
-                // Bind parameters - using variables instead of passing by reference
+                // Bind parameters - using bindValue instead of bindParam
                 $id = $data->id;
                 $name = $data->name;
                 $description = $data->description ?? null;
                 $isActive = isset($data->isActive) ? (bool)$data->isActive : true;
                 
-                $stmt->bindParam(':id', $id);
-                $stmt->bindParam(':name', $name);
-                $stmt->bindParam(':description', $description);
-                $stmt->bindParam(':isActive', $isActive, PDO::PARAM_BOOL);
+                $stmt->bindValue(':id', $id);
+                $stmt->bindValue(':name', $name);
+                $stmt->bindValue(':description', $description);
+                $stmt->bindValue(':isActive', $isActive, PDO::PARAM_BOOL);
                 
                 if($stmt->execute()) {
                     http_response_code(200);
@@ -130,7 +130,7 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 $id = $data->id;
-                $stmt->bindParam(':id', $id);
+                $stmt->bindValue(':id', $id);
                 
                 if($stmt->execute()) {
                     http_response_code(200);
