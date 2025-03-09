@@ -69,7 +69,7 @@ switch($method) {
                 
                 $stmt = $conn->prepare($query);
                 
-                // Fix: Using bindValue instead of bindParam to avoid passing by reference issues
+                // Using bindValue instead of bindParam to avoid passing by reference issues
                 $stmt->bindValue(':name', $data['name']);
                 $stmt->bindValue(':address', $data['address']);
                 $stmt->bindValue(':city', $data['city']);

@@ -10,12 +10,34 @@ const handleResponse = async (response: Response) => {
   if (!response.ok) {
     // Try to get error message from response
     try {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'API request failed');
+      // Check if the response is JSON
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+      } else {
+        // If not JSON, get the text and use it in the error
+        const errorText = await response.text();
+        console.error('Non-JSON error response:', errorText);
+        throw new Error(`API request failed: Server returned a non-JSON response`);
+      }
     } catch (e) {
-      throw new Error(`API request failed with status ${response.status}`);
+      if (e instanceof SyntaxError) {
+        // JSON parse error
+        console.error('Error parsing JSON response');
+        throw new Error(`API request failed: Invalid JSON response from server`);
+      }
+      throw e; // Re-throw the error from the JSON handling
     }
   }
+  
+  // Check if the response is JSON before trying to parse it
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    console.error('Response is not JSON:', await response.text());
+    throw new Error('API request failed: Server returned a non-JSON response');
+  }
+  
   return response.json();
 };
 
@@ -246,18 +268,28 @@ export const paymentsAPI = {
 // School Profile API
 export const schoolProfileAPI = {
   get: async (): Promise<SchoolProfile> => {
-    const response = await fetch(`${API_URL}/school-profile.php`);
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_URL}/school-profile.php`);
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error fetching school profile:', error);
+      throw error;
+    }
   },
 
   save: async (profile: SchoolProfile): Promise<{ message: string }> => {
-    const response = await fetch(`${API_URL}/school-profile.php`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(profile),
-    });
-    return handleResponse(response);
+    try {
+      const response = await fetch(`${API_URL}/school-profile.php`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profile),
+      });
+      return handleResponse(response);
+    } catch (error) {
+      console.error('Error saving school profile:', error);
+      throw error;
+    }
   },
 };
