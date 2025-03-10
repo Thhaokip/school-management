@@ -1,34 +1,23 @@
-
 import { useState, useEffect } from 'react';
+import { studentsAPI } from '@/services/api';
+import { toast } from 'sonner'; // Assuming 'sonner' is the correct toast library
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Table, TableBody, TableCell, TableHead, 
-  TableHeader, TableRow 
-} from '@/components/ui/table';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Student } from '@/types';
-import { 
-  Search, PlusIcon, Users, Pencil, Eye, 
-  UserPlus, FileEdit, Loader2
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Dialog, DialogContent, DialogDescription, 
-  DialogFooter, DialogHeader, DialogTitle
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { format } from 'date-fns';
-import { studentsAPI } from '@/services/api';
+import { FileEdit, Trash, Loader2, UserPlus, Search, Users } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
 
 const Students = () => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [formData, setFormData] = useState<Partial<Student>>({
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [formData, setFormData] = useState({
     studentId: '',
     name: '',
     class: '',
@@ -37,128 +26,94 @@ const Students = () => {
     parentName: '',
     contactNumber: '',
     email: '',
-    joinDate: ''
+    address: '',
+    dateOfBirth: '',
+    joinDate: '',
+    image: null
   });
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
+    const fetchStudents = async () => {
+      setLoading(true);
+      try {
+        const response = await studentsAPI.getAll();
+        console.log('Fetched students:', response.data); // Debug log
+        setStudents(response.data || []);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        toast.error('Failed to load students. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchStudents();
   }, []);
 
-  const fetchStudents = async () => {
-    setLoading(true);
-    try {
-      const data = await studentsAPI.getAll();
-      setStudents(data);
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      toast.error('Failed to load students. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreate = () => {
-    setEditingStudent(null);
-    setFormData({
-      studentId: generateStudentId(),
-      name: '',
-      class: '',
-      section: '',
-      rollNumber: '',
-      parentName: '',
-      contactNumber: '',
-      email: '',
-      joinDate: format(new Date(), 'yyyy-MM-dd')
-    });
-    setOpenDialog(true);
-  };
-
-  const handleEdit = (student: Student) => {
-    setEditingStudent(student);
-    setFormData({
-      studentId: student.studentId,
-      name: student.name,
-      class: student.class,
-      section: student.section,
-      rollNumber: student.rollNumber,
-      parentName: student.parentName,
-      contactNumber: student.contactNumber,
-      email: student.email || '',
-      joinDate: student.joinDate || ''
-    });
-    setOpenDialog(true);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleDrop = (acceptedFiles) => {
+    setFormData((prev) => ({ ...prev, image: acceptedFiles[0] }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    
+
     try {
+      const formDataToSend = new FormData();
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+
       if (editingStudent) {
-        // Update existing student
-        await studentsAPI.update({
-          id: editingStudent.id,
-          ...formData as Student
-        });
-        
-        // Update local state
-        setStudents(prev => 
-          prev.map(student => 
-            student.id === editingStudent.id 
-              ? { ...student, ...formData } as Student
-              : student
+        await studentsAPI.update(formData.studentId, formDataToSend);
+        setStudents((prev) =>
+          prev.map((student) =>
+            student.studentId === formData.studentId ? formData : student
           )
         );
-        toast.success("Student information updated successfully");
+        toast.success('Student updated successfully');
       } else {
-        // Create new student
-        const studentData = {
-          studentId: formData.studentId || generateStudentId(),
-          name: formData.name || '',
-          class: formData.class || '',
-          section: formData.section || '',
-          rollNumber: formData.rollNumber || '',
-          parentName: formData.parentName || '',
-          contactNumber: formData.contactNumber || '',
-          email: formData.email,
-          joinDate: formData.joinDate || format(new Date(), 'yyyy-MM-dd')
-        };
-        
-        const response = await studentsAPI.create(studentData);
-        
-        // Add to local state with the ID from the response
-        const newStudent = {
-          id: response.id || String(students.length + 1),
-          ...studentData
-        };
-        
-        setStudents(prev => [...prev, newStudent]);
-        toast.success("Student added successfully");
+        const response = await studentsAPI.create(formDataToSend);
+        setStudents((prev) => [...prev, response.data]);
+        toast.success('Student added successfully');
       }
+      setOpenDialog(false);
     } catch (error) {
-      console.error('Error saving student:', error);
-      toast.error('Failed to save student. Please try again.');
+      console.error('Error submitting form:', error);
+      toast.error('Failed to submit form. Please try again.');
     } finally {
       setSubmitting(false);
-      setOpenDialog(false);
     }
   };
 
-  const generateStudentId = () => {
-    const prefix = 'OAK';
-    const year = new Date().getFullYear();
-    const random = Math.floor(1000 + Math.random() * 9000);
-    return `${prefix}${year}${random}`;
+  const handleEdit = (student) => {
+    setEditingStudent(student);
+    setFormData(student);
+    setOpenDialog(true);
+  };
+
+  const handleDelete = async (studentId) => {
+    if (!confirm("Are you sure you want to delete this student?")) return;
+
+    setDeleting(true);
+    try {
+      await studentsAPI.delete(studentId);
+      setStudents(prev => prev.filter(student => student.studentId !== studentId));
+      toast.success("Student deleted successfully");
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      toast.error('Failed to delete student. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const filteredStudents = students.filter(student => 
@@ -168,6 +123,11 @@ const Students = () => {
     student.rollNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: handleDrop,
+    accept: 'image/*'
+  });
+
   return (
     <div className="space-y-6 animate-fade-in">
       <PageHeader 
@@ -176,7 +136,24 @@ const Students = () => {
         action={{
           label: "Add Student",
           icon: <UserPlus className="mr-2 h-4 w-4" />,
-          onClick: handleCreate
+          onClick: () => {
+            setEditingStudent(null);
+            setFormData({
+              studentId: '',
+              name: '',
+              class: '',
+              section: '',
+              rollNumber: '',
+              parentName: '',
+              contactNumber: '',
+              email: '',
+              address: '',
+              dateOfBirth: '',
+              joinDate: '',
+              image: null
+            });
+            setOpenDialog(true);
+          }
         }}
       />
 
@@ -250,9 +227,11 @@ const Students = () => {
                         <Button 
                           variant="ghost" 
                           size="icon"
+                          onClick={() => handleDelete(student.studentId)}
+                          disabled={deleting}
                         >
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only">View</span>
+                          <Trash className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -265,7 +244,7 @@ const Students = () => {
       </Card>
       
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>
               {editingStudent ? "Edit Student Information" : "Add New Student"}
@@ -380,6 +359,31 @@ const Students = () => {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="address" className="text-right">
+                  Address
+                </Label>
+                <Input
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="dateOfBirth" className="text-right">
+                  Date of Birth
+                </Label>
+                <Input
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="joinDate" className="text-right">
                   Join Date
                 </Label>
@@ -391,6 +395,19 @@ const Students = () => {
                   onChange={handleChange}
                   className="col-span-3"
                 />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="image" className="text-right">
+                  Image
+                </Label>
+                <div {...getRootProps()} className="col-span-3 border-dashed border-2 border-gray-300 p-4 text-center cursor-pointer">
+                  <input {...getInputProps()} />
+                  {formData.image ? (
+                    <p>{formData.image.name}</p>
+                  ) : (
+                    <p>Drag & drop an image here, or click to select one</p>
+                  )}
+                </div>
               </div>
             </div>
             <DialogFooter>
